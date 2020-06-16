@@ -1,6 +1,8 @@
 jfx-11-jme-embedded
 ---
 
+ [ ![Download](https://api.bintray.com/packages/jayfella/com.jayfella/jfx-11-jme-embedded/images/download.svg) ](https://bintray.com/jayfella/com.jayfella/jfx-11-jme-embedded/_latestVersion) 
+
 Embed JME into JavaFX!
 
 For scientific, industrial or game development use, embedding jMonkeyEngine into JavaFX allows you to make complete use
