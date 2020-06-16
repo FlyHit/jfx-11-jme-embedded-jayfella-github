@@ -5,7 +5,9 @@ import com.jme3.audio.AudioListenerState;
 import com.jme3.system.AppSettings;
 import javafx.application.Application;
 import javafx.scene.Scene;
+import javafx.scene.control.Label;
 import javafx.scene.layout.StackPane;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 import java.util.concurrent.atomic.AtomicReference;
@@ -69,7 +71,11 @@ public class TestJmeEmbedded extends Application {
         // add the ImageView that Jme renders to...
         root.getChildren().add(app.getImageView());
 
-        primaryStage.setScene(new Scene(root, 800, 600));
+        Label label = new Label("I am a a JavaFX Label.");
+        label.setTextFill(Color.WHITE);
+        root.getChildren().addAll(label);
+
+        primaryStage.setScene(new Scene(root, 1280, 720));
         primaryStage.show();
 
     }
