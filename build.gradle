@@ -1,0 +1,51 @@
+plugins {
+    id 'java'
+    id 'org.openjfx.javafxplugin' version '0.0.8'
+    id 'maven-publish'
+    id 'application'
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+}
+
+java {
+    withSourcesJar()
+    withJavadocJar()
+}
+
+javafx {
+    version = '11'
+    modules = [
+            'javafx.base',
+            'javafx.controls',
+            'javafx.fxml',
+            'javafx.graphics',
+            'javafx.swing'
+    ]
+}
+
+group 'com.jayfella'
+version '1.0.0'
+
+mainClassName = "com.jayfella.jfx.embedded.test.TestJmeEmbedded"
+
+repositories {
+    jcenter()
+}
+
+project.ext {
+    version_jme = "3.3.2-stable"
+}
+
+dependencies {
+
+    implementation "org.jmonkeyengine:jme3-core:$version_jme"
+    implementation "org.jmonkeyengine:jme3-desktop:$version_jme"
+    implementation "org.jmonkeyengine:jme3-lwjgl3:$version_jme"
+
+}
