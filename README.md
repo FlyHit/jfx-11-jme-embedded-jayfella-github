@@ -210,5 +210,4 @@ public class Main {
 
 ### Working Example
 
-For a complete working example of the classes outlined in this documentation see the `src/test` directory of this
-repository.
+For a complete working example of the classes outlined in this documentation [this repository](https://github.com/jayfella/jme-in-jfx).
