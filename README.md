@@ -105,7 +105,7 @@ public class MyJmeGame extends SimpleJfxApplication {
 }
 ```
 
-### Integrating JME into JavaFx
+### Integrating JME into JavaFX
 
 Outlined below is an example of a JavaFX `Application` class. This is typically your point of entry for a JavaFX
 application. Notes have been provided in the code below to explain each step of the process.
@@ -205,3 +205,8 @@ public class Main {
 }
 
 ```
+
+### Working Example
+
+For a complete working example of the classes outlined in this documentation see the `src/test` directory of this
+repository.
