@@ -1,4 +1,5 @@
 import com.jayfella.jfx.embedded.SimpleJfxApplication;
+import com.jayfella.jfx.embedded.jfx.EditorFxImageView;
 import com.jme3.app.FlyCamAppState;
 import com.jme3.app.StatsAppState;
 import com.jme3.audio.AudioListenerState;
@@ -6,6 +7,7 @@ import com.jme3.system.AppSettings;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
@@ -75,9 +77,23 @@ public class TestJmeEmbedded extends Application {
         label.setTextFill(Color.WHITE);
         root.getChildren().addAll(label);
 
-        primaryStage.setScene(new Scene(root, 1280, 720));
-        primaryStage.show();
+        // ImageViews don't usually get focus alerts.
+        addFocusHandler(primaryStage, app);
+    }
 
+
+    private void addFocusHandler(Stage primaryStage, SimpleJfxApplication app) {
+
+        // Input handler for JME scene
+        primaryStage.getScene().addEventFilter(MouseEvent.ANY, event -> {
+
+            if (event.getTarget() instanceof EditorFxImageView) {
+
+                if (event.getEventType() == MouseEvent.MOUSE_ENTERED_TARGET) {
+                    app.getImageView().requestFocus();
+                }
+            }
+        });
     }
 
 }
