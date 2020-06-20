@@ -23,7 +23,8 @@ public abstract class SimpleJfxApplication extends SimpleApplication {
     private EditorFxImageView imageView;
     private ImageViewFrameTransferSceneProcessor sceneProcessor;
 
-    private boolean initialized = false;
+    private boolean started = false;
+    protected boolean initialized = false;
 
     public SimpleJfxApplication(AppState... initialStates) {
         super(initialStates);
@@ -54,7 +55,6 @@ public abstract class SimpleJfxApplication extends SimpleApplication {
 
         imageView = new EditorFxImageView();
         imageView.getProperties().put(JfxMouseInput.PROP_USE_LOCAL_COORDS, true);
-        // imageView.setMouseTransparent(true);
         imageView.setFocusTraversable(true);
 
         List<ViewPort> vps = renderManager.getPostViews();
@@ -66,12 +66,6 @@ public abstract class SimpleJfxApplication extends SimpleApplication {
 
         sceneProcessor.setTransferMode(FrameTransferSceneProcessor.TransferMode.ON_CHANGES);
 
-
-
-
-
-        // setView3d();
-
     }
 
     @Override
@@ -80,9 +74,9 @@ public abstract class SimpleJfxApplication extends SimpleApplication {
 
         viewPort.setBackgroundColor(ColorRGBA.Black);
 
-        initialized = true;
+        started = true;
 
-        log.info("jMonkeyEngine Initialized.");
+        log.info("jMonkeyEngine Started.");
 
         initApp();
     }
@@ -91,6 +85,24 @@ public abstract class SimpleJfxApplication extends SimpleApplication {
         return imageView;
     }
 
+    /**
+     * Indicates that the first of two phases of the engine startup sequence is complete. It has started.
+     * The engine is ready for input, but has not yet been initialized.
+     * You must set initialized = true in your initApp method.
+     *
+     * @return whether or not the engine has started.
+     */
+    public boolean isStarted() {
+        return started;
+    }
+
+    /**
+     * Indicates that the second of two phases are complete. The engine is initialized.
+     * The engine is waiting for the class to set initialized = true.
+     * This usually occurs in the users initApp() method.
+     *
+     * @return whether or not the engine is initialized.
+     */
     public boolean isInitialized() {
         return initialized;
     }
