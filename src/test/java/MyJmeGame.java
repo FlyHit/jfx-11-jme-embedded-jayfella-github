@@ -40,6 +40,8 @@ public class MyJmeGame extends SimpleJfxApplication {
 
         rootNode.attachChild(box);
 
+        // We have configured the engine to our liking. Initialization is complete.
+        initialized = true;
     }
 
     @Override
