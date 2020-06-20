@@ -5,7 +5,6 @@ import com.jme3.app.StatsAppState;
 import com.jme3.audio.AudioListenerState;
 import com.jme3.system.AppSettings;
 import javafx.application.Application;
-import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
@@ -56,7 +55,7 @@ public class TestJmeEmbedded extends Application {
 
         // wait for the engine to initialize...
         // You can show some kind of indeterminate progress bar in a splash screen while you wait if you like...
-        while (jfxApp.get() == null || !jfxApp.get().isInitialized()) {
+        while (jfxApp.get() == null || (!(jfxApp.get().isStarted() && jfxApp.get().isInitialized())) ) {
             Thread.sleep(10);
         }
 
