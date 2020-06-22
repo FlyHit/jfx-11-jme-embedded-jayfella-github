@@ -1,6 +1,6 @@
 plugins {
     id 'java'
-    id 'org.openjfx.javafxplugin' version '0.0.8'
+//    id 'org.openjfx.javafxplugin' version '0.0.8'
     id 'maven-publish'
     id 'application'
 }
@@ -18,19 +18,19 @@ java {
     withJavadocJar()
 }
 
-javafx {
-    version = '11'
-    modules = [
-            'javafx.base',
-            'javafx.controls',
-            'javafx.fxml',
-            'javafx.graphics',
-            'javafx.swing'
-    ]
-}
+//javafx {
+//    version = '11'
+//    modules = [
+//            'javafx.base',
+//            'javafx.controls',
+//            'javafx.fxml',
+//            'javafx.graphics',
+//            'javafx.swing'
+//    ]
+//}
 
 group 'com.jayfella'
-version '1.0.0'
+version '1.0.2'
 
 mainClassName = "com.jayfella.jfx.embedded.test.TestJmeEmbedded"
 

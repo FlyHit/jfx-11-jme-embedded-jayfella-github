@@ -38,7 +38,7 @@ public class ImageViewFrameTransferSceneProcessor extends AbstractFrameTransferS
 
     @Override
     protected void bindListeners() {
-        var destination = getDestination();
+        ImageView destination = getDestination();
         destination.fitWidthProperty().addListener(widthListener);
         destination.fitHeightProperty().addListener(heightListener);
         destination.preserveRatioProperty().addListener(rationListener);
@@ -47,7 +47,7 @@ public class ImageViewFrameTransferSceneProcessor extends AbstractFrameTransferS
 
     @Override
     protected void unbindDestination() {
-        var destination = getDestination();
+        ImageView destination = getDestination();
         destination.fitWidthProperty().removeListener(widthListener);
         destination.fitHeightProperty().removeListener(heightListener);
         destination.preserveRatioProperty().removeListener(rationListener);

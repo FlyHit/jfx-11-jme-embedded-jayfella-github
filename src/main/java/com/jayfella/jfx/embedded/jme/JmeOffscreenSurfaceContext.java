@@ -103,7 +103,7 @@ public class JmeOffscreenSurfaceContext implements JmeContext {
      * @return the new app settings.
      */
     protected AppSettings createSettings() {
-        var settings = new AppSettings(true);
+        AppSettings settings = new AppSettings(true);
         settings.setRenderer(AppSettings.LWJGL_OPENGL32);
         return settings;
     }
@@ -205,8 +205,8 @@ public class JmeOffscreenSurfaceContext implements JmeContext {
 
     @Override
     public void create(boolean waitFor) {
-        var render = System.getProperty("jfx.background.render", AppSettings.LWJGL_OPENGL32);
-        var backgroundContext = getBackgroundContext();
+        String render = System.getProperty("jfx.background.render", AppSettings.LWJGL_OPENGL32);
+        JmeContext backgroundContext = getBackgroundContext();
         backgroundContext.getSettings().setRenderer(render);
         backgroundContext.create(waitFor);
     }

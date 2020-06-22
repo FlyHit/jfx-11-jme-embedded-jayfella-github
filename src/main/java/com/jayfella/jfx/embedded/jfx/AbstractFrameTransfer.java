@@ -164,7 +164,7 @@ public abstract class AbstractFrameTransfer<T> implements FrameTransfer {
 
             frameByteBuffer.clear();
 
-            var renderer = renderManager.getRenderer();
+            Renderer renderer = renderManager.getRenderer();
             renderer.readFrameBufferWithFormat(frameBuffer, frameByteBuffer, Image.Format.RGBA8);
 
         } finally {
@@ -209,7 +209,7 @@ public abstract class AbstractFrameTransfer<T> implements FrameTransfer {
 
         try {
 
-            var imageByteBuffer = getImageByteBuffer();
+            byte[] imageByteBuffer = getImageByteBuffer();
 
             synchronized (byteBuffer) {
                 System.arraycopy(byteBuffer, 0, imageByteBuffer, 0, byteBuffer.length);
@@ -226,7 +226,7 @@ public abstract class AbstractFrameTransfer<T> implements FrameTransfer {
                 imageByteBuffer[i + 3] = a;
             }
 
-            var pixelFormat = PixelFormat.getByteBgraInstance();
+            PixelFormat<ByteBuffer> pixelFormat = PixelFormat.getByteBgraInstance();
 
             pixelWriter.setPixels(0, 0, width, height, pixelFormat, imageByteBuffer, 0, width * 4);
 

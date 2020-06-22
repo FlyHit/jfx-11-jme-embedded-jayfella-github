@@ -5,6 +5,7 @@ import com.jayfella.jfx.embedded.core.ThreadRunner;
 import com.jayfella.jfx.embedded.jme.JmeOffscreenSurfaceContext;
 import com.jme3.app.Application;
 import com.jme3.input.KeyInput;
+import com.jme3.input.RawInputListener;
 import com.jme3.input.event.KeyInputEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Node;
@@ -167,7 +168,7 @@ public class JfxKeyInput extends JfxInput implements KeyInput {
     public void unbind() {
 
         if (hasNode()) {
-            var node = getNode();
+            Node node = getNode();
             node.removeEventHandler(KeyEvent.KEY_PRESSED, processKeyPressed);
             node.removeEventHandler(KeyEvent.KEY_RELEASED, processKeyReleased);
         }
@@ -185,11 +186,11 @@ public class JfxKeyInput extends JfxInput implements KeyInput {
 
     private void onKeyEvent(KeyEvent keyEvent, boolean pressed) {
 
-        var code = convertKeyCode(keyEvent.getCode());
-        var character = keyEvent.getText();
-        var keyChar = character.isEmpty() ? '\0' : character.charAt(0);
+        int code = convertKeyCode(keyEvent.getCode());
+        String character = keyEvent.getText();
+        char keyChar = character.isEmpty() ? '\0' : character.charAt(0);
 
-        var event = new KeyInputEvent(code, keyChar, pressed, false);
+        KeyInputEvent event = new KeyInputEvent(code, keyChar, pressed, false);
         event.setTime(getInputTimeNanos());
 
         threadRunner.runInJmeThread(() -> keyInputEvents.add(event));
@@ -197,14 +198,14 @@ public class JfxKeyInput extends JfxInput implements KeyInput {
 
     @Override
     protected void updateImpl() {
-        var listener = getListener();
+        RawInputListener listener = getListener();
         while (!keyInputEvents.isEmpty()) {
             listener.onKeyEvent(keyInputEvents.poll());
         }
     }
 
     private int convertKeyCode(KeyCode keyCode) {
-        var code = KEY_CODE_TO_JME.get(keyCode);
+        Integer code = KEY_CODE_TO_JME.get(keyCode);
         return code == null ? KEY_UNKNOWN : code;
     }
 }
