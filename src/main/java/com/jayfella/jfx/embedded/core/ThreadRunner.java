@@ -1,6 +1,6 @@
 package com.jayfella.jfx.embedded.core;
 
-import com.jayfella.jfx.embedded.SimpleJfxApplication;
+import com.jayfella.jfx.embedded.JmeEmbedJfxApp;
 import javafx.application.Platform;
 
 /**
@@ -12,9 +12,9 @@ import javafx.application.Platform;
  */
 public class ThreadRunner {
 
-    private final SimpleJfxApplication application;
+    private final JmeEmbedJfxApp application;
 
-    public ThreadRunner(SimpleJfxApplication application) {
+    public ThreadRunner(JmeEmbedJfxApp application) {
         this.application = application;
     }
 

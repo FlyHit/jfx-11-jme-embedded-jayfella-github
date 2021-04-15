@@ -1,6 +1,6 @@
 package com.jayfella.jfx.embedded.jfx;
 
-import com.jayfella.jfx.embedded.SimpleJfxApplication;
+import com.jayfella.jfx.embedded.JmeEmbedJfxApp;
 import com.jme3.post.SceneProcessor;
 import com.jme3.texture.FrameBuffer;
 import javafx.scene.Node;
@@ -28,7 +28,7 @@ public class ImageViewFrameTransferSceneProcessor extends AbstractFrameTransferS
 
     @Override
     protected void bindDestination(
-            SimpleJfxApplication application,
+            JmeEmbedJfxApp application,
             ImageView destination,
             Node inputNode
     ) {

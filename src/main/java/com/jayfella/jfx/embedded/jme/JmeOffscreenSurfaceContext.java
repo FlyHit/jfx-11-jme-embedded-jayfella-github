@@ -1,9 +1,8 @@
 package com.jayfella.jfx.embedded.jme;
 
-import com.jayfella.jfx.embedded.SimpleJfxApplication;
+import com.jayfella.jfx.embedded.JmeEmbedJfxApp;
 import com.jayfella.jfx.embedded.jfx.JfxKeyInput;
 import com.jayfella.jfx.embedded.jfx.JfxMouseInput;
-import com.jme3.app.SimpleApplication;
 import com.jme3.input.JoyInput;
 import com.jme3.input.TouchInput;
 import com.jme3.opencl.Context;
@@ -56,7 +55,7 @@ public class JmeOffscreenSurfaceContext implements JmeContext {
         this.width = 1;
     }
 
-    public void setApplication(SimpleJfxApplication app) {
+    public void setApplication(JmeEmbedJfxApp app) {
         this.keyInput.setApplication(app);
         this.mouseInput.setApplication(app);
     }

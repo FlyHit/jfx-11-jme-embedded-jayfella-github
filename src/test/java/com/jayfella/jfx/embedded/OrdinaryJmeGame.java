@@ -1,3 +1,5 @@
+package com.jayfella.jfx.embedded;
+
 import com.jme3.app.SimpleApplication;
 import com.jme3.light.DirectionalLight;
 import com.jme3.material.Material;
@@ -9,11 +11,15 @@ import com.jme3.scene.shape.Box;
 import com.jme3.system.AppSettings;
 import com.jme3.texture.Texture;
 
+import java.util.function.Consumer;
+
 /**
  * @author Chen Jiongyu
  */
-public class OrdinaryJmeGame extends SimpleApplication {
+public class OrdinaryJmeGame extends SimpleApplication implements AppEmbedded {
     private Geometry box;
+    private Consumer<Void> beforeInitialization;
+    private Consumer<Void> afterInitialization;
 
     public static void main(String[] args) {
         OrdinaryJmeGame game = new OrdinaryJmeGame();
@@ -31,6 +37,10 @@ public class OrdinaryJmeGame extends SimpleApplication {
 
     @Override
     public void simpleInitApp() {
+        if (beforeInitialization != null) {
+            beforeInitialization.accept(null);
+        }
+
         flyCam.setDragToRotate(true);
         flyCam.setMoveSpeed(6);
 
@@ -51,10 +61,26 @@ public class OrdinaryJmeGame extends SimpleApplication {
         box.getMaterial().setFloat("Metallic", 0.001f);
 
         rootNode.attachChild(box);
+
+        viewPort.setBackgroundColor(ColorRGBA.White);
+
+        if (afterInitialization != null) {
+            afterInitialization.accept(null);
+        }
     }
 
     @Override
     public void simpleUpdate(float tpf) {
         box.rotate(tpf * .2f, tpf * .3f, tpf * .4f);
+    }
+
+    @Override
+    public void setBeforeInitialization(Consumer<Void> beforeInitialization) {
+        this.beforeInitialization = beforeInitialization;
+    }
+
+    @Override
+    public void setAfterInitialization(Consumer<Void> afterInitialization) {
+        this.afterInitialization = afterInitialization;
     }
 }

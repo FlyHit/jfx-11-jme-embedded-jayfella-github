@@ -1,4 +1,4 @@
-import com.jayfella.jfx.embedded.SimpleJfxApplication;
+import com.jayfella.jfx.embedded.SimpleJmeEmbedJfxApp;
 import com.jme3.app.state.AppState;
 import com.jme3.light.DirectionalLight;
 import com.jme3.material.Material;
@@ -9,7 +9,7 @@ import com.jme3.scene.Geometry;
 import com.jme3.scene.shape.Box;
 import com.jme3.texture.Texture;
 
-public class MyJmeGame extends SimpleJfxApplication {
+public class MyJmeGame extends SimpleJmeEmbedJfxApp {
 
     public MyJmeGame(AppState... initialStates) {
         super(initialStates);

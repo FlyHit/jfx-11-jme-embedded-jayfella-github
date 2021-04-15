@@ -1,9 +1,8 @@
 package com.jayfella.jfx.embedded.jfx;
 
-import com.jayfella.jfx.embedded.SimpleJfxApplication;
+import com.jayfella.jfx.embedded.JmeEmbedJfxApp;
 import com.jayfella.jfx.embedded.core.ThreadRunner;
 import com.jayfella.jfx.embedded.jme.JmeOffscreenSurfaceContext;
-import com.jme3.app.Application;
 import com.jme3.input.KeyInput;
 import com.jme3.input.RawInputListener;
 import com.jme3.input.event.KeyInputEvent;
@@ -151,7 +150,7 @@ public class JfxKeyInput extends JfxInput implements KeyInput {
         this.keyInputEvents = new LinkedList<>();
     }
 
-    public void setApplication(SimpleJfxApplication application) {
+    public void setApplication(JmeEmbedJfxApp application) {
         this.threadRunner = new ThreadRunner(application);
     }
 

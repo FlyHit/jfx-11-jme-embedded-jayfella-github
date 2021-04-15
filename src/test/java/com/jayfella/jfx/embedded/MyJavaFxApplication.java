@@ -1,8 +1,7 @@
-import com.jayfella.jfx.embedded.SimpleJmeEmbedJfxApp;
+package com.jayfella.jfx.embedded;
+
 import com.jayfella.jfx.embedded.jfx.LazyResizeImageView;
-import com.jme3.app.FlyCamAppState;
-import com.jme3.app.StatsAppState;
-import com.jme3.audio.AudioListenerState;
+import com.jayfella.jfx.embedded.jme.JmeOffscreenSurfaceContext;
 import com.jme3.system.AppSettings;
 import javafx.application.Application;
 import javafx.beans.binding.Bindings;
@@ -23,30 +22,21 @@ public class MyJavaFxApplication extends Application {
 
         // We need to start JME on a new thread, not on the JFX thread.
         // We could do this a million ways, but let's just be as safe as possible.
-        AtomicReference<SimpleJmeEmbedJfxApp> jfxApp = new AtomicReference<>();
+        AtomicReference<JmeEmbedJfxApp> jfxApp = new AtomicReference<>();
 
         new Thread(new ThreadGroup("LWJGL"), () -> {
-
-            // create a new instance of our game.
-            // SimpleJfxApplication myJmeGame = new MyJmeGame();
-
-            // or add some appstates..
-            SimpleJmeEmbedJfxApp myJmeGame = new MyJmeGame(
-                    new StatsAppState(),
-                    new AudioListenerState(),
-                    new FlyCamAppState()
-            );
-
-            // set our appSettings here
-            AppSettings appSettings = myJmeGame.getSettings();
+            OrdinaryJmeGame ordinaryApp = new OrdinaryJmeGame();
+            AppSettings appSettings = new AppSettings(true);
             appSettings.setUseJoysticks(true);
             appSettings.setGammaCorrection(true);
             appSettings.setSamples(16);
-            appSettings.setFrameRate(60);
-            appSettings.setVSync(true);
-
-            jfxApp.set(myJmeGame);
-
+            appSettings.setFrameRate(-1);
+//        appSettings.setVSync(true);
+            appSettings.setResizable(true);
+            appSettings.setCustomRenderer(JmeOffscreenSurfaceContext.class);
+            ordinaryApp.setSettings(appSettings);
+            JfxAppWrapper app = new JfxAppWrapper(ordinaryApp);
+            jfxApp.set(app);
             // we have a specific "start" method because due to LWJGL3 behavior this method will never return.
             // If we called this method in the constructor, it would never get constructed, so we have seperated
             // the blocking line of code in a method that gets called after construction.
@@ -64,11 +54,11 @@ public class MyJavaFxApplication extends Application {
         // Just remember that any calls to JME need to be enqueued from app.enqueue(Runnable) if you are not on the JME
         // thread (e.g. you're on the JavaFX thread). Any calls to JavaFx need to be done on the JavaFX thread, or via
         // Plaform.runLater(Runnable).
-        SimpleJmeEmbedJfxApp app = jfxApp.get();
+        JmeEmbedJfxApp app = jfxApp.get();
 
-        primaryStage.setTitle("Test JME Embedded in JavaFx");
+        primaryStage.setTitle("Test Wrap Ordinary JME Game");
 
-        LazyResizeImageView imageView = app.getCanvas();
+        LazyResizeImageView imageView = (LazyResizeImageView) app.getCanvas();
         StackPane root = new StackPane();
         imageView.lazySizeProperty().bind(Bindings.createObjectBinding(() ->
                 new Dimension2D(root.getWidth(), root.getHeight()), root.widthProperty(), root.heightProperty()));

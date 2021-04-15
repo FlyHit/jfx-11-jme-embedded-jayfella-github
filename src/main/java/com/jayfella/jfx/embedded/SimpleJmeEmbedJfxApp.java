@@ -14,9 +14,9 @@ import com.jme3.system.AppSettings;
 import java.util.List;
 import java.util.logging.Logger;
 
-public abstract class SimpleJfxApplication extends SimpleApplication {
+public abstract class SimpleJmeEmbedJfxApp extends SimpleApplication implements JmeEmbedJfxApp {
 
-    private static final Logger log = Logger.getLogger(SimpleJfxApplication.class.getName());
+    private static final Logger log = Logger.getLogger(SimpleJmeEmbedJfxApp.class.getName());
 
     private final Thread jmeThread;
 
@@ -26,7 +26,7 @@ public abstract class SimpleJfxApplication extends SimpleApplication {
     private boolean started = false;
     protected boolean initialized = false;
 
-    public SimpleJfxApplication(AppState... initialStates) {
+    public SimpleJmeEmbedJfxApp(AppState... initialStates) {
         super(initialStates);
 
         jmeThread = Thread.currentThread();
@@ -82,32 +82,24 @@ public abstract class SimpleJfxApplication extends SimpleApplication {
         initApp();
     }
 
-    public LazyResizeImageView getImageView() {
+    protected abstract void initApp();
+
+    @Override
+    public LazyResizeImageView getCanvas() {
         return imageView;
     }
 
-    /**
-     * Indicates that the first of two phases of the engine startup sequence is complete. It has started.
-     * The engine is ready for input, but has not yet been initialized.
-     * You must set initialized = true in your initApp method.
-     *
-     * @return whether or not the engine has started.
-     */
+    @Override
     public boolean isStarted() {
         return started;
     }
 
-    /**
-     * Indicates that the second of two phases are complete. The engine is initialized.
-     * The engine is waiting for the class to set initialized = true.
-     * This usually occurs in the users initApp() method.
-     *
-     * @return whether or not the engine is initialized.
-     */
+    @Override
     public boolean isInitialized() {
         return initialized;
     }
 
+    @Override
     public boolean isJmeThread() {
         return Thread.currentThread() == jmeThread;
     }
@@ -115,7 +107,4 @@ public abstract class SimpleJfxApplication extends SimpleApplication {
     public AppSettings getSettings() {
         return settings;
     }
-
-    public abstract void initApp();
-
 }

@@ -1,4 +1,4 @@
-import com.jayfella.jfx.embedded.SimpleJfxApplication;
+import com.jayfella.jfx.embedded.SimpleJmeEmbedJfxApp;
 import com.jayfella.jfx.embedded.jfx.LazyResizeImageView;
 import com.jme3.app.FlyCamAppState;
 import com.jme3.app.StatsAppState;
@@ -23,7 +23,7 @@ public class TestJmeEmbedded extends Application {
 
         // We need to start JME on a new thread, not on the JFX thread.
         // We could do this a million ways, but let's just be as safe as possible.
-        AtomicReference<SimpleJfxApplication> jfxApp = new AtomicReference<>();
+        AtomicReference<SimpleJmeEmbedJfxApp> jfxApp = new AtomicReference<>();
 
         new Thread(new ThreadGroup("LWJGL"), () -> {
 
@@ -31,7 +31,7 @@ public class TestJmeEmbedded extends Application {
             // SimpleJfxApplication myJmeGame = new MyJmeGame();
 
             // or add some appstates..
-            SimpleJfxApplication myJmeGame = new MyJmeGame(
+            SimpleJmeEmbedJfxApp myJmeGame = new MyJmeGame(
                     new StatsAppState(),
                     new AudioListenerState(),
                     new FlyCamAppState()
@@ -63,14 +63,14 @@ public class TestJmeEmbedded extends Application {
         // Just remember that any calls to JME need to be enqueued from app.enqueue(Runnable) if you are not on the JME
         // thread (e.g. you're on the JavaFX thread). Any calls to JavaFx need to be done on the JavaFX thread, or via
         // Plaform.runLater(Runnable).
-        SimpleJfxApplication app = jfxApp.get();
+        SimpleJmeEmbedJfxApp app = jfxApp.get();
 
         primaryStage.setTitle("Test JME Embedded in JavaFx");
 
         StackPane root = new StackPane();
 
         // add the ImageView that Jme renders to...
-        root.getChildren().add(app.getImageView());
+        root.getChildren().add(app.getCanvas());
 
         Label label = new Label("I am a a JavaFX Label.");
         label.setTextFill(Color.WHITE);
@@ -81,7 +81,7 @@ public class TestJmeEmbedded extends Application {
     }
 
 
-    private void addFocusHandler(Stage primaryStage, SimpleJfxApplication app) {
+    private void addFocusHandler(Stage primaryStage, SimpleJmeEmbedJfxApp app) {
 
         // Input handler for JME scene
         primaryStage.getScene().addEventFilter(MouseEvent.ANY, event -> {
@@ -89,7 +89,7 @@ public class TestJmeEmbedded extends Application {
             if (event.getTarget() instanceof LazyResizeImageView) {
 
                 if (event.getEventType() == MouseEvent.MOUSE_ENTERED_TARGET) {
-                    app.getImageView().requestFocus();
+                    app.getCanvas().requestFocus();
                 }
             }
         });

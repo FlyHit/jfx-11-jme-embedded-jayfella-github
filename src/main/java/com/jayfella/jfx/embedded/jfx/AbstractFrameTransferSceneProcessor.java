@@ -1,6 +1,6 @@
 package com.jayfella.jfx.embedded.jfx;
 
-import com.jayfella.jfx.embedded.SimpleJfxApplication;
+import com.jayfella.jfx.embedded.JmeEmbedJfxApp;
 import com.jayfella.jfx.embedded.jme.JmeOffscreenSurfaceContext;
 import com.jme3.post.SceneProcessor;
 import com.jme3.profile.AppProfiler;
@@ -75,7 +75,7 @@ public abstract class AbstractFrameTransferSceneProcessor<T extends Node> implem
     /**
      * The JME application.
      */
-    private volatile SimpleJfxApplication application;
+    private volatile JmeEmbedJfxApp application;
 
     /**
      * The destination of jMe frames.
@@ -138,7 +138,7 @@ public abstract class AbstractFrameTransferSceneProcessor<T extends Node> implem
      *
      * @return the application.
      */
-    protected SimpleJfxApplication getApplication() {
+    protected JmeEmbedJfxApp getApplication() {
         return application;
     }
 
@@ -201,7 +201,7 @@ public abstract class AbstractFrameTransferSceneProcessor<T extends Node> implem
      *
      * @param application the application.
      */
-    protected void setApplication(SimpleJfxApplication application) {
+    protected void setApplication(JmeEmbedJfxApp application) {
         this.application = application;
     }
 
@@ -285,7 +285,7 @@ public abstract class AbstractFrameTransferSceneProcessor<T extends Node> implem
      * @param destination the destination.
      * @param application the application.
      */
-    public void bind(T destination, SimpleJfxApplication application) {
+    public void bind(T destination, JmeEmbedJfxApp application) {
         bind(destination, application, destination);
     }
 
@@ -296,7 +296,7 @@ public abstract class AbstractFrameTransferSceneProcessor<T extends Node> implem
      * @param application the application.
      * @param viewPort    the view port.
      */
-    public void bind(T destination, SimpleJfxApplication application, ViewPort viewPort) {
+    public void bind(T destination, JmeEmbedJfxApp application, ViewPort viewPort) {
         bind(destination, application, destination, viewPort, true);
     }
 
@@ -308,7 +308,7 @@ public abstract class AbstractFrameTransferSceneProcessor<T extends Node> implem
      * @param application the application.
      * @param inputNode   the input node.
      */
-    public void bind(T destination, SimpleJfxApplication application, Node inputNode) {
+    public void bind(T destination, JmeEmbedJfxApp application, Node inputNode) {
 
         RenderManager renderManager = application.getRenderManager();
         List<ViewPort> postViews = renderManager.getPostViews();
@@ -331,7 +331,7 @@ public abstract class AbstractFrameTransferSceneProcessor<T extends Node> implem
      */
     public void bind(
             T destination,
-            SimpleJfxApplication application,
+            JmeEmbedJfxApp application,
             Node inputNode,
             ViewPort viewPort,
             boolean main
@@ -362,7 +362,7 @@ public abstract class AbstractFrameTransferSceneProcessor<T extends Node> implem
      * @param inputNode   the input node.
      */
     protected void bindDestination(
-            SimpleJfxApplication application,
+            JmeEmbedJfxApp application,
             T destination,
             Node inputNode
     ) {
