@@ -28,7 +28,9 @@ public class ImageFrameTransfer extends AbstractFrameTransfer<ImageView> {
     ) {
         super(imageView, transferMode, frameBuffer, width, height);
         //JfxPlatform.runInFxThread(() -> imageView.setImage(writableImage));
-        Platform.runLater(() -> imageView.setImage(writableImage));
+        Platform.runLater(() -> {
+            imageView.setImage(writableImage);
+        });
     }
 
     @Override

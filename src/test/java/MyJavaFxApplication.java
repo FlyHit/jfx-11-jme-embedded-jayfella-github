@@ -5,18 +5,18 @@ import com.jme3.app.StatsAppState;
 import com.jme3.audio.AudioListenerState;
 import com.jme3.system.AppSettings;
 import javafx.application.Application;
-import javafx.scene.control.Label;
-import javafx.scene.input.MouseEvent;
+import javafx.beans.binding.Bindings;
+import javafx.geometry.Dimension2D;
+import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
-import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * Do not run this class. Run JfxMain
+ * @author Chen Jiongyu
  */
-public class TestJmeEmbedded extends Application {
+public class MyJavaFxApplication extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
@@ -42,7 +42,8 @@ public class TestJmeEmbedded extends Application {
             appSettings.setUseJoysticks(true);
             appSettings.setGammaCorrection(true);
             appSettings.setSamples(16);
-
+            appSettings.setFrameRate(60);
+            appSettings.setVSync(true);
 
             jfxApp.set(myJmeGame);
 
@@ -55,7 +56,7 @@ public class TestJmeEmbedded extends Application {
 
         // wait for the engine to initialize...
         // You can show some kind of indeterminate progress bar in a splash screen while you wait if you like...
-        while (jfxApp.get() == null || (!(jfxApp.get().isStarted() && jfxApp.get().isInitialized())) ) {
+        while (jfxApp.get() == null || !jfxApp.get().isInitialized()) {
             Thread.sleep(10);
         }
 
@@ -67,32 +68,16 @@ public class TestJmeEmbedded extends Application {
 
         primaryStage.setTitle("Test JME Embedded in JavaFx");
 
+        LazyResizeImageView imageView = app.getImageView();
         StackPane root = new StackPane();
-
+        imageView.lazySizeProperty().bind(Bindings.createObjectBinding(() ->
+                new Dimension2D(root.getWidth(), root.getHeight()), root.widthProperty(), root.heightProperty()));
         // add the ImageView that Jme renders to...
-        root.getChildren().add(app.getImageView());
+        root.getChildren().add(imageView);
 
-        Label label = new Label("I am a a JavaFX Label.");
-        label.setTextFill(Color.WHITE);
-        root.getChildren().addAll(label);
-
-        // ImageViews don't usually get focus alerts.
-        addFocusHandler(primaryStage, app);
-    }
-
-
-    private void addFocusHandler(Stage primaryStage, SimpleJfxApplication app) {
-
-        // Input handler for JME scene
-        primaryStage.getScene().addEventFilter(MouseEvent.ANY, event -> {
-
-            if (event.getTarget() instanceof LazyResizeImageView) {
-
-                if (event.getEventType() == MouseEvent.MOUSE_ENTERED_TARGET) {
-                    app.getImageView().requestFocus();
-                }
-            }
-        });
+        primaryStage.setScene(new Scene(root, 800, 600));
+        primaryStage.setOnCloseRequest(event -> System.exit(0));
+        primaryStage.show();
     }
 
 }

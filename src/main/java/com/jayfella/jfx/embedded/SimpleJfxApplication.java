@@ -1,9 +1,9 @@
 package com.jayfella.jfx.embedded;
 
-import com.jayfella.jfx.embedded.jfx.EditorFxImageView;
 import com.jayfella.jfx.embedded.jfx.FrameTransferSceneProcessor;
 import com.jayfella.jfx.embedded.jfx.ImageViewFrameTransferSceneProcessor;
 import com.jayfella.jfx.embedded.jfx.JfxMouseInput;
+import com.jayfella.jfx.embedded.jfx.LazyResizeImageView;
 import com.jayfella.jfx.embedded.jme.JmeOffscreenSurfaceContext;
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.AppState;
@@ -18,9 +18,9 @@ public abstract class SimpleJfxApplication extends SimpleApplication {
 
     private static final Logger log = Logger.getLogger(SimpleJfxApplication.class.getName());
 
-    private Thread jmeThread;
+    private final Thread jmeThread;
 
-    private EditorFxImageView imageView;
+    private LazyResizeImageView imageView;
     private ImageViewFrameTransferSceneProcessor sceneProcessor;
 
     private boolean started = false;
@@ -44,6 +44,7 @@ public abstract class SimpleJfxApplication extends SimpleApplication {
 
     }
 
+    @Override
     public void start() {
         JmeOffscreenSurfaceContext canvasContext = (JmeOffscreenSurfaceContext) getContext();
         canvasContext.setApplication(this);
@@ -53,7 +54,7 @@ public abstract class SimpleJfxApplication extends SimpleApplication {
 
     private void initJavaFxImage() {
 
-        imageView = new EditorFxImageView();
+        imageView = new LazyResizeImageView();
         imageView.getProperties().put(JfxMouseInput.PROP_USE_LOCAL_COORDS, true);
         imageView.setFocusTraversable(true);
 
@@ -81,7 +82,7 @@ public abstract class SimpleJfxApplication extends SimpleApplication {
         initApp();
     }
 
-    public EditorFxImageView getImageView() {
+    public LazyResizeImageView getImageView() {
         return imageView;
     }
 

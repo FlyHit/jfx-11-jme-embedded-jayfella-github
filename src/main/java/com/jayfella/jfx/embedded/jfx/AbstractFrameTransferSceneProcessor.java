@@ -17,6 +17,7 @@ import javafx.scene.Node;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
@@ -91,6 +92,8 @@ public abstract class AbstractFrameTransferSceneProcessor<T extends Node> implem
 
     private boolean askFixAspect;
     private boolean enabled;
+
+    private static Image.Format format;
 
     public AbstractFrameTransferSceneProcessor() {
         transferMode = TransferMode.ALWAYS;
@@ -525,7 +528,14 @@ public abstract class AbstractFrameTransferSceneProcessor<T extends Node> implem
 
             FrameBuffer frameBuffer = new FrameBuffer(width, height, 1);
             frameBuffer.setDepthBuffer(Image.Format.Depth);
-            frameBuffer.setColorBuffer(Image.Format.RGBA8);
+            if (format == null) {
+                try {
+                    format = ImageUtil.getImageFormat();
+                } catch (ExecutionException | InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            frameBuffer.setColorBuffer(format);
             frameBuffer.setSrgb(true);
 
             viewPort.setOutputFrameBuffer(frameBuffer);

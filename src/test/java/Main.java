@@ -2,7 +2,10 @@ import com.jme3.util.LWJGLBufferAllocator;
 import javafx.application.Application;
 import org.lwjgl.system.Configuration;
 
-public class JfxMain {
+/**
+ * @author Chen Jiongyu
+ */
+public class Main {
 
     public static void main(String... args) {
 
@@ -14,7 +17,7 @@ public class JfxMain {
 
         System.setProperty(LWJGLBufferAllocator.PROPERTY_CONCURRENT_BUFFER_ALLOCATOR, "true");
 
-        Application.launch(TestJmeEmbedded.class, args);
+        Application.launch(MyJavaFxApplication.class, args);
 
     }
 

@@ -5,12 +5,16 @@ import com.jme3.renderer.Renderer;
 import com.jme3.texture.FrameBuffer;
 import com.jme3.texture.Image;
 import com.jme3.util.BufferUtils;
+import javafx.animation.AnimationTimer;
 import javafx.application.Platform;
 import javafx.scene.image.PixelFormat;
 import javafx.scene.image.PixelWriter;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -86,6 +90,27 @@ public abstract class AbstractFrameTransfer<T> implements FrameTransfer {
      */
     private final int height;
 
+    private static Image.Format imageFormat;
+    private static long frame;
+    private static long lastLoad;
+
+    static {
+        try {
+            imageFormat = ImageUtil.getImageFormat();
+        } catch (ExecutionException | InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        new AnimationTimer() {
+            @Override
+            public void handle(long now) {
+                frame++;
+            }
+        }.start();
+    }
+
+    private final ExecutorService pool = Executors.newSingleThreadExecutor();
+
     public AbstractFrameTransfer(T destination, int width, int height, FrameTransferSceneProcessor.TransferMode transferMode) {
         this(destination, transferMode, null, width, height);
     }
@@ -109,7 +134,7 @@ public abstract class AbstractFrameTransfer<T> implements FrameTransfer {
         } else {
             this.frameBuffer = new FrameBuffer(width, height, 1);
             this.frameBuffer.setDepthBuffer(Image.Format.Depth);
-            this.frameBuffer.setColorBuffer(Image.Format.RGBA8);
+            this.frameBuffer.setColorBuffer(imageFormat);
             this.frameBuffer.setSrgb(true);
         }
 
@@ -152,6 +177,10 @@ public abstract class AbstractFrameTransfer<T> implements FrameTransfer {
 
     @Override
     public void copyFrameBufferToImage(RenderManager renderManager) {
+        if (frame <= lastLoad + 1) {
+            return;
+        }
+        lastLoad = frame;
 
         while (!frameState.compareAndSet(WAITING_STATE, RUNNING_STATE)) {
             if (frameState.get() == DISPOSED_STATE) {
@@ -161,25 +190,23 @@ public abstract class AbstractFrameTransfer<T> implements FrameTransfer {
 
         // Convert screenshot.
         try {
-
             frameByteBuffer.clear();
-
             Renderer renderer = renderManager.getRenderer();
-            renderer.readFrameBufferWithFormat(frameBuffer, frameByteBuffer, Image.Format.RGBA8);
-
+            renderer.readFrameBufferWithFormat(frameBuffer, frameByteBuffer, imageFormat);
         } finally {
             if (!frameState.compareAndSet(RUNNING_STATE, WAITING_STATE)) {
                 throw new RuntimeException("unknown problem with the frame state");
             }
         }
 
-        synchronized (byteBuffer) {
+        pool.submit(() -> {
+//            synchronized (byteBuffer) {
+//            if (pixelWriter.getPixelFormat().isPremultiplied()) {
+//                ImageUtil.premultiply(frameByteBuffer, imageFormat);
+//            }
             frameByteBuffer.get(byteBuffer);
-
             if (transferMode == FrameTransferSceneProcessor.TransferMode.ON_CHANGES) {
-
                 final byte[] prevBuffer = getPrevImageByteBuffer();
-
                 if (Arrays.equals(prevBuffer, byteBuffer)) {
                     if (frameCount == 0) return;
                 } else {
@@ -190,10 +217,12 @@ public abstract class AbstractFrameTransfer<T> implements FrameTransfer {
                 frameByteBuffer.position(0);
                 frameCount--;
             }
-        }
+//            }
 
-        // JfxPlatform.runInFxThread(this::writeFrame);
-        Platform.runLater(this::writeFrame);
+
+            // JfxPlatform.runInFxThread(this::writeFrame);
+            Platform.runLater(this::writeFrame);
+        });
     }
 
     /**
@@ -209,27 +238,40 @@ public abstract class AbstractFrameTransfer<T> implements FrameTransfer {
 
         try {
 
-            byte[] imageByteBuffer = getImageByteBuffer();
-
-            synchronized (byteBuffer) {
-                System.arraycopy(byteBuffer, 0, imageByteBuffer, 0, byteBuffer.length);
+//            byte[] imageByteBuffer = getImageByteBuffer();
+//
+//            synchronized (byteBuffer) {
+//                System.arraycopy(byteBuffer, 0, imageByteBuffer, 0, byteBuffer.length);
+//            }
+//
+//            for (int i = 0, length = width * height * 4; i < length; i += 4) {
+//                byte r = imageByteBuffer[i];
+//                byte g = imageByteBuffer[i + 1];
+//                byte b = imageByteBuffer[i + 2];
+//                byte a = imageByteBuffer[i + 3];
+//                imageByteBuffer[i] = b;
+//                imageByteBuffer[i + 1] = g;
+//                imageByteBuffer[i + 2] = r;
+//                imageByteBuffer[i + 3] = a;
+//            }
+            frameByteBuffer.position(0);
+            PixelFormat pixelFormat = pixelWriter.getPixelFormat();
+            // TODO premultiply not work and weaker performance
+            switch (pixelFormat.getType()) {
+                case INT_ARGB:
+                case INT_ARGB_PRE:
+                    pixelWriter.setPixels(0, 0, width, height,
+                            PixelFormat.getIntArgbInstance(), frameByteBuffer.asIntBuffer(), width * 4);
+                    break;
+                case BYTE_BGRA:
+                case BYTE_BGRA_PRE:
+                    pixelWriter.setPixels(0, 0, width, height,
+                            PixelFormat.getByteBgraInstance(), frameByteBuffer, width * 4);
+                    break;
+                default:
+                    break;
             }
-
-            for (int i = 0, length = width * height * 4; i < length; i += 4) {
-                byte r = imageByteBuffer[i];
-                byte g = imageByteBuffer[i + 1];
-                byte b = imageByteBuffer[i + 2];
-                byte a = imageByteBuffer[i + 3];
-                imageByteBuffer[i] = b;
-                imageByteBuffer[i + 1] = g;
-                imageByteBuffer[i + 2] = r;
-                imageByteBuffer[i + 3] = a;
-            }
-
-            PixelFormat<ByteBuffer> pixelFormat = PixelFormat.getByteBgraInstance();
-
-            pixelWriter.setPixels(0, 0, width, height, pixelFormat, imageByteBuffer, 0, width * 4);
-
+            frameByteBuffer.position(0);
         } finally {
             if (!imageState.compareAndSet(RUNNING_STATE, WAITING_STATE)) {
                 throw new RuntimeException("unknown problem with the image state");
