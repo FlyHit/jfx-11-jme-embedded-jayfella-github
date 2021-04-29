@@ -93,6 +93,7 @@ public abstract class AbstractFrameTransferSceneProcessor<T extends Node> implem
     private boolean askFixAspect;
     private boolean enabled;
 
+    private int numSamples = 1;
     private static Image.Format format;
 
     public AbstractFrameTransferSceneProcessor() {
@@ -469,6 +470,7 @@ public abstract class AbstractFrameTransferSceneProcessor<T extends Node> implem
         RenderManager renderManager = getRenderManager();
         FrameBuffer frameBuffer = viewPort.getOutputFrameBuffer();
 
+        AbstractFrameTransfer.setNumSamples(numSamples);
         FrameTransfer frameTransfer = createFrameTransfer(frameBuffer, width, height);
         frameTransfer.initFor(renderManager.getRenderer(), isMain());
 
@@ -500,7 +502,6 @@ public abstract class AbstractFrameTransferSceneProcessor<T extends Node> implem
      * @param height the height.
      */
     protected void reshapeCurrentViewPort(int width, int height) {
-
         //if (LOGGER.isEnabled(LoggerLevel.DEBUG)) {
             //LOGGER.debug(this, "reshape the current view port to " + width + "x" + height);
         //}
@@ -525,8 +526,7 @@ public abstract class AbstractFrameTransferSceneProcessor<T extends Node> implem
                 .findAny();
 
         if (!any.isPresent()) {
-
-            FrameBuffer frameBuffer = new FrameBuffer(width, height, 1);
+            FrameBuffer frameBuffer = new FrameBuffer(width, height, numSamples);
             frameBuffer.setDepthBuffer(Image.Format.Depth);
             if (format == null) {
                 try {
@@ -576,17 +576,14 @@ public abstract class AbstractFrameTransferSceneProcessor<T extends Node> implem
 
     @Override
     public void preFrame(float tpf) {
-
     }
 
     @Override
     public void postQueue(RenderQueue renderQueue) {
-
     }
 
     @Override
     public void postFrame(FrameBuffer out) {
-
         if (!isEnabled()) {
             return;
         }
@@ -630,5 +627,27 @@ public abstract class AbstractFrameTransferSceneProcessor<T extends Node> implem
     @Override
     public void setTransferMode(TransferMode transferMode) {
         this.transferMode = transferMode;
+    }
+
+    /**
+     * return the number of samples for antialiasing
+     *
+     * @return numSamples
+     */
+    public int getNumSamples() {
+        return numSamples;
+    }
+
+    /**
+     * Sets the number of samples for antialiasing
+     *
+     * @param numSamples the number of Samples
+     */
+    public void setNumSamples(int numSamples) {
+        if (numSamples <= 0) {
+            throw new IllegalArgumentException("numSamples must bfpproce > 0");
+        }
+
+        this.numSamples = numSamples;
     }
 }

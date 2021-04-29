@@ -2,6 +2,7 @@ package com.jayfella.jfx.embedded.jfx;
 
 import com.jme3.renderer.RenderManager;
 import com.jme3.renderer.Renderer;
+import com.jme3.texture.FrameBuffer;
 
 /**
  * The class for transferring content from a jME frame buffer to somewhere.
@@ -44,4 +45,6 @@ public interface FrameTransfer {
      * Dispose this transfer.
      */
     void dispose();
+
+    FrameBuffer getFrameBuffer();
 }

@@ -2,6 +2,7 @@ import com.jayfella.jfx.embedded.SimpleJmeEmbedJfxApp;
 import com.jayfella.jfx.embedded.jfx.LazyResizeImageView;
 import com.jme3.app.FlyCamAppState;
 import com.jme3.app.StatsAppState;
+import com.jme3.app.state.ScreenshotAppState;
 import com.jme3.audio.AudioListenerState;
 import com.jme3.system.AppSettings;
 import javafx.application.Application;
@@ -34,7 +35,8 @@ public class MyJavaFxApplication extends Application {
             SimpleJmeEmbedJfxApp myJmeGame = new MyJmeGame(
                     new StatsAppState(),
                     new AudioListenerState(),
-                    new FlyCamAppState()
+                    new FlyCamAppState(),
+                    new ScreenshotAppState("C:\\Users\\FlyWay\\Desktop\\New folder\\", "we")
             );
 
             // set our appSettings here

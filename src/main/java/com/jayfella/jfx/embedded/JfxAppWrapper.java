@@ -33,7 +33,7 @@ public class JfxAppWrapper implements JmeEmbedJfxApp {
     private final Thread jmeThread;
     protected boolean initialized = false;
     private LazyResizeImageView imageView;
-    private ImageViewFrameTransferSceneProcessor sceneProcessor;
+    private final ImageViewFrameTransferSceneProcessor sceneProcessor;
     private boolean started = false;
 
     public JfxAppWrapper(AppEmbedded application) {
@@ -42,14 +42,18 @@ public class JfxAppWrapper implements JmeEmbedJfxApp {
         }
 
         this.application = (LegacyApplication) application;
-        jmeThread = Thread.currentThread();
+        application.getSettings().setCustomRenderer(JmeOffscreenSurfaceContext.class);
         this.application.createCanvas();
+        jmeThread = Thread.currentThread();
 
         application.setBeforeInitialization(unused -> {
             initJavaFxImage();
             started = true;
         });
         application.setAfterInitialization(unused -> initialized = true);
+
+        sceneProcessor = new ImageViewFrameTransferSceneProcessor();
+        sceneProcessor.setNumSamples(application.getSettings().getSamples());
     }
 
     private void initJavaFxImage() {
@@ -58,7 +62,6 @@ public class JfxAppWrapper implements JmeEmbedJfxApp {
         imageView.setFocusTraversable(true);
         List<ViewPort> vps = application.getRenderManager().getPostViews();
         ViewPort last = vps.get(vps.size() - 1);
-        sceneProcessor = new ImageViewFrameTransferSceneProcessor();
         sceneProcessor.bind(imageView, this, last);
         sceneProcessor.setEnabled(true);
         sceneProcessor.setTransferMode(FrameTransferSceneProcessor.TransferMode.ON_CHANGES);

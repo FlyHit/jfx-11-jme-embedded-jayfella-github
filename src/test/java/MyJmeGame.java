@@ -1,5 +1,7 @@
 import com.jayfella.jfx.embedded.SimpleJmeEmbedJfxApp;
 import com.jme3.app.state.AppState;
+import com.jme3.input.KeyInput;
+import com.jme3.input.controls.KeyTrigger;
 import com.jme3.light.DirectionalLight;
 import com.jme3.material.Material;
 import com.jme3.material.Materials;
@@ -42,11 +44,14 @@ public class MyJmeGame extends SimpleJmeEmbedJfxApp {
 
         // We have configured the engine to our liking. Initialization is complete.
         initialized = true;
+
+        inputManager.deleteMapping("ScreenShot");
+        inputManager.addMapping("ScreenShot", new KeyTrigger(KeyInput.KEY_M));
     }
 
     @Override
     public void simpleUpdate(float tpf) {
-        box.rotate(tpf * .2f, tpf * .3f, tpf * .4f);
+//        box.rotate(tpf * .2f, tpf * .3f, tpf * .4f);
     }
 
 }

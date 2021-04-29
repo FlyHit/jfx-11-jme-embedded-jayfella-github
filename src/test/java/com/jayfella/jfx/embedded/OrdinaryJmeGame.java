@@ -26,7 +26,7 @@ public class OrdinaryJmeGame extends SimpleApplication implements AppEmbedded {
         AppSettings appSettings = new AppSettings(true);
         appSettings.setUseJoysticks(true);
         appSettings.setGammaCorrection(true);
-        appSettings.setSamples(16);
+//        appSettings.setSamples(16);
         appSettings.setFrameRate(-1);
 //        appSettings.setVSync(true);
         appSettings.setResizable(true);
@@ -82,5 +82,10 @@ public class OrdinaryJmeGame extends SimpleApplication implements AppEmbedded {
     @Override
     public void setAfterInitialization(Consumer<Void> afterInitialization) {
         this.afterInitialization = afterInitialization;
+    }
+
+    @Override
+    public AppSettings getSettings() {
+        return settings;
     }
 }

@@ -1,7 +1,6 @@
 package com.jayfella.jfx.embedded;
 
 import com.jayfella.jfx.embedded.jfx.LazyResizeImageView;
-import com.jayfella.jfx.embedded.jme.JmeOffscreenSurfaceContext;
 import com.jme3.system.AppSettings;
 import javafx.application.Application;
 import javafx.beans.binding.Bindings;
@@ -28,12 +27,10 @@ public class MyJavaFxApplication extends Application {
             OrdinaryJmeGame ordinaryApp = new OrdinaryJmeGame();
             AppSettings appSettings = new AppSettings(true);
             appSettings.setUseJoysticks(true);
-            appSettings.setGammaCorrection(true);
             appSettings.setSamples(16);
             appSettings.setFrameRate(-1);
-//        appSettings.setVSync(true);
+//            appSettings.setVSync(true);
             appSettings.setResizable(true);
-            appSettings.setCustomRenderer(JmeOffscreenSurfaceContext.class);
             ordinaryApp.setSettings(appSettings);
             JfxAppWrapper app = new JfxAppWrapper(ordinaryApp);
             jfxApp.set(app);

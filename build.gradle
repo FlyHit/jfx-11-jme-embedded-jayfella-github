@@ -43,9 +43,7 @@ project.ext {
 }
 
 dependencies {
-
     implementation "org.jmonkeyengine:jme3-core:$version_jme"
     implementation "org.jmonkeyengine:jme3-desktop:$version_jme"
     implementation "org.jmonkeyengine:jme3-lwjgl3:$version_jme"
-
 }
