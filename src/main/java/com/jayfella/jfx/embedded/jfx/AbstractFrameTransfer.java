@@ -4,6 +4,7 @@ import com.jme3.renderer.RenderManager;
 import com.jme3.renderer.Renderer;
 import com.jme3.texture.FrameBuffer;
 import com.jme3.texture.Image;
+import com.jme3.texture.Texture2D;
 import com.jme3.util.BufferUtils;
 import javafx.animation.AnimationTimer;
 import javafx.application.Platform;
@@ -16,6 +17,10 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
+
+import static org.lwjgl.opengl.GL15.*;
+import static org.lwjgl.opengl.GL21.GL_PIXEL_PACK_BUFFER;
+import static org.lwjgl.opengl.GL30.GL_COLOR_ATTACHMENT0;
 
 /**
  * The base implementation of a frame transfer.
@@ -34,10 +39,7 @@ public abstract class AbstractFrameTransfer<T> implements FrameTransfer {
      */
     protected final PixelWriter pixelWriter;
 
-    /**
-     * The Frame byte buffer.
-     */
-    protected final ByteBuffer frameByteBuffer;
+    private final int[] pbos = new int[2];
 
     /**
      * The transfer mode.
@@ -76,11 +78,16 @@ public abstract class AbstractFrameTransfer<T> implements FrameTransfer {
 
     private static int numSamples = 1;
     private static Image.Format imageFormat;
-    private static long frame;
-    private static long lastLoad;
+    /**
+     * The Frame byte buffer.
+     */
+    protected ByteBuffer frameByteBuffer;
+    private long frame;
     private final AnimationTimer timer;
     private boolean finished = true;
     private FrameBuffer normalFrameBuffer;
+    private long lastLoad;
+    private int lastReadIdx = 0;
 
     static {
         try {
@@ -111,9 +118,19 @@ public abstract class AbstractFrameTransfer<T> implements FrameTransfer {
         if (frameBuffer != null) {
             this.frameBuffer = frameBuffer;
         } else {
+            glGenBuffers(pbos);
+            glBindBuffer(GL_PIXEL_PACK_BUFFER, pbos[0]);
+            int size = width * height * 4;
+            glBufferData(GL_PIXEL_PACK_BUFFER, size, GL_STREAM_READ);
+            glBindBuffer(GL_PIXEL_PACK_BUFFER, pbos[1]);
+            glBufferData(GL_PIXEL_PACK_BUFFER, size, GL_STREAM_READ);
+            glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+
             this.frameBuffer = new FrameBuffer(width, height, numSamples);
-            this.frameBuffer.setColorBuffer(imageFormat);
-            this.frameBuffer.setDepthBuffer(Image.Format.Depth);
+            Texture2D msColor = new Texture2D(width, height, numSamples, imageFormat);
+            this.frameBuffer.setColorTexture(msColor);
+//            this.frameBuffer.setColorBuffer(imageFormat);
+//            this.frameBuffer.setDepthBuffer(Image.Format.Depth);
             this.frameBuffer.setSrgb(true);
         }
 
@@ -128,7 +145,7 @@ public abstract class AbstractFrameTransfer<T> implements FrameTransfer {
         byteBuffer = new byte[getWidth() * getHeight() * 4];
         prevImageByteBuffer = new byte[getWidth() * getHeight() * 4];
         imageByteBuffer = new byte[getWidth() * getHeight() * 4];
-        pixelWriter = getPixelWriter(destination, this.frameBuffer, width, height);
+        pixelWriter = getPixelWriter(destination, null, width, height);
 
         timer = new AnimationTimer() {
             @Override
@@ -187,53 +204,61 @@ public abstract class AbstractFrameTransfer<T> implements FrameTransfer {
             finished = false;
         }
 
+        lastReadIdx = lastReadIdx == 0 ? 1 : 0;
+        int index = lastReadIdx == 0 ? 1 : 0;
+
         // Convert screenshot.
         frameByteBuffer.clear();
         Renderer renderer = renderManager.getRenderer();
-        FrameBuffer frameBufferToRead = frameBuffer;
         if (numSamples > 1) {
             renderer.setFrameBuffer(normalFrameBuffer);
             renderer.copyFrameBuffer(frameBuffer, normalFrameBuffer, false);
-            frameBufferToRead = normalFrameBuffer;
         }
-        renderer.readFrameBufferWithFormat(frameBufferToRead, frameByteBuffer, imageFormat);
-        renderer.setFrameBuffer(null);
+        //  For framebuffer objects, the default read buffer is GL_COLOR_ATTACHMENT0
+        glReadBuffer(GL_COLOR_ATTACHMENT0);
+        glBindBuffer(GL_PIXEL_PACK_BUFFER, pbos[index]);
+        glReadPixels(0, 0, width, height, GL_BGRA, GL_UNSIGNED_BYTE, 0);
+        glBindBuffer(GL_PIXEL_PACK_BUFFER, pbos[lastReadIdx]);
+        frameByteBuffer = glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY);
+        glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
+        glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+        if (frameByteBuffer != null) {
+            pool.submit(() -> {
+                frameByteBuffer.get(byteBuffer);
+                if (transferMode == FrameTransferSceneProcessor.TransferMode.ON_CHANGES) {
+                    final byte[] prevBuffer = getPrevImageByteBuffer();
+                    if (Arrays.equals(prevBuffer, byteBuffer)) {
+                        if (frameCount == 0) {
+                            synchronized (this) {
+                                finished = true;
+                            }
+                            return;
+                        }
+                    } else {
+                        frameCount = 2;
+                        System.arraycopy(byteBuffer, 0, prevBuffer, 0, byteBuffer.length);
+                    }
 
-        pool.submit(() -> {
-            frameByteBuffer.get(byteBuffer);
-            if (transferMode == FrameTransferSceneProcessor.TransferMode.ON_CHANGES) {
-                final byte[] prevBuffer = getPrevImageByteBuffer();
-                if (Arrays.equals(prevBuffer, byteBuffer)) {
-                    if (frameCount == 0) {
+                    frameByteBuffer.position(0);
+                    frameCount--;
+                }
+
+                FutureTask<Boolean> writeFrame = new FutureTask<>(() -> {
+                    writeFrame();
+                    return true;
+                });
+                Platform.runLater(writeFrame);
+                try {
+                    if (writeFrame.get()) {
                         synchronized (this) {
                             finished = true;
                         }
-                        return;
                     }
-                } else {
-                    frameCount = 2;
-                    System.arraycopy(byteBuffer, 0, prevBuffer, 0, byteBuffer.length);
+                } catch (InterruptedException | ExecutionException e) {
+                    e.printStackTrace();
                 }
-
-                frameByteBuffer.position(0);
-                frameCount--;
-            }
-
-            FutureTask<Boolean> writeFrame = new FutureTask<>(() -> {
-                writeFrame();
-                return true;
             });
-            Platform.runLater(writeFrame);
-            try {
-                if (writeFrame.get()) {
-                    synchronized (this) {
-                        finished = true;
-                    }
-                }
-            } catch (InterruptedException | ExecutionException e) {
-                e.printStackTrace();
-            }
-        });
+        }
     }
 
     /**
@@ -290,6 +315,7 @@ public abstract class AbstractFrameTransfer<T> implements FrameTransfer {
         if (numSamples > 1) {
             normalFrameBuffer.dispose();
         }
+        glDeleteBuffers(pbos);
         frameBuffer.dispose();
         // BufferUtils.destroyDirectBuffer(frameByteBuffer);
     }
