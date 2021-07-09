@@ -28,7 +28,7 @@ public class MyJavaFxApplication extends Application {
             AppSettings appSettings = new AppSettings(true);
             appSettings.setUseJoysticks(true);
             appSettings.setSamples(16);
-            appSettings.setFrameRate(-1);
+            appSettings.setFrameRate(40);
 //            appSettings.setVSync(true);
             appSettings.setResizable(true);
             ordinaryApp.setSettings(appSettings);
@@ -38,7 +38,6 @@ public class MyJavaFxApplication extends Application {
             // If we called this method in the constructor, it would never get constructed, so we have seperated
             // the blocking line of code in a method that gets called after construction.
             jfxApp.get().start();
-
         }, "LWJGL Render").start();
 
         // wait for the engine to initialize...

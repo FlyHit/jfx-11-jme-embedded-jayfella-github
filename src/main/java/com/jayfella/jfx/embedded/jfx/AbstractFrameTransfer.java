@@ -8,15 +8,14 @@ import com.jme3.texture.Texture2D;
 import com.jme3.util.BufferUtils;
 import javafx.animation.AnimationTimer;
 import javafx.application.Platform;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.image.PixelFormat;
 import javafx.scene.image.PixelWriter;
 
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.FutureTask;
 
 import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.opengl.GL21.GL_PIXEL_PACK_BUFFER;
@@ -49,17 +48,12 @@ public abstract class AbstractFrameTransfer<T> implements FrameTransfer {
     /**
      * The byte buffer.
      */
-    protected final byte[] byteBuffer;
-
-    /**
-     * The image byte buffer.
-     */
-    protected final byte[] imageByteBuffer;
+    protected final byte[] currentImage;
 
     /**
      * The prev image byte buffer.
      */
-    protected final byte[] prevImageByteBuffer;
+    protected final byte[] previousImage;
 
     /**
      * How many frames need to write else.
@@ -84,7 +78,7 @@ public abstract class AbstractFrameTransfer<T> implements FrameTransfer {
     protected ByteBuffer frameByteBuffer;
     private long frame;
     private final AnimationTimer timer;
-    private boolean finished = true;
+    private volatile boolean finished = true;
     private FrameBuffer normalFrameBuffer;
     private long lastLoad;
     private int lastReadIdx = 0;
@@ -127,8 +121,11 @@ public abstract class AbstractFrameTransfer<T> implements FrameTransfer {
             glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 
             this.frameBuffer = new FrameBuffer(width, height, numSamples);
+            // texture is faster
             Texture2D msColor = new Texture2D(width, height, numSamples, imageFormat);
+            Texture2D msDepth = new Texture2D(width, height, numSamples, Image.Format.Depth);
             this.frameBuffer.setColorTexture(msColor);
+            this.frameBuffer.setDepthTexture(msDepth);
 //            this.frameBuffer.setColorBuffer(imageFormat);
 //            this.frameBuffer.setDepthBuffer(Image.Format.Depth);
             this.frameBuffer.setSrgb(true);
@@ -136,15 +133,16 @@ public abstract class AbstractFrameTransfer<T> implements FrameTransfer {
 
         if (numSamples > 1) {
             normalFrameBuffer = new FrameBuffer(width, height, 1);
+//            Texture2D texture = new Texture2D(width, height, 1, imageFormat);
+//            normalFrameBuffer.setColorTexture(texture);
             normalFrameBuffer.setColorBuffer(imageFormat);
             normalFrameBuffer.setDepthBuffer(Image.Format.Depth);
             normalFrameBuffer.setSrgb(true);
         }
 
         frameByteBuffer = BufferUtils.createByteBuffer(getWidth() * getHeight() * 4);
-        byteBuffer = new byte[getWidth() * getHeight() * 4];
-        prevImageByteBuffer = new byte[getWidth() * getHeight() * 4];
-        imageByteBuffer = new byte[getWidth() * getHeight() * 4];
+        currentImage = new byte[getWidth() * getHeight() * 4];
+        previousImage = new byte[getWidth() * getHeight() * 4];
         pixelWriter = getPixelWriter(destination, null, width, height);
 
         timer = new AnimationTimer() {
@@ -197,12 +195,10 @@ public abstract class AbstractFrameTransfer<T> implements FrameTransfer {
         }
         lastLoad = frame;
 
-        synchronized (this) {
-            if (!finished) {
-                return;
-            }
-            finished = false;
+        if (!finished) {
+            return;
         }
+        finished = false;
 
         lastReadIdx = lastReadIdx == 0 ? 1 : 0;
         int index = lastReadIdx == 0 ? 1 : 0;
@@ -224,37 +220,16 @@ public abstract class AbstractFrameTransfer<T> implements FrameTransfer {
         glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
         if (frameByteBuffer != null) {
             pool.submit(() -> {
-                frameByteBuffer.get(byteBuffer);
-                if (transferMode == FrameTransferSceneProcessor.TransferMode.ON_CHANGES) {
-                    final byte[] prevBuffer = getPrevImageByteBuffer();
-                    if (Arrays.equals(prevBuffer, byteBuffer)) {
-                        if (frameCount == 0) {
-                            synchronized (this) {
-                                finished = true;
-                            }
-                            return;
-                        }
-                    } else {
-                        frameCount = 2;
-                        System.arraycopy(byteBuffer, 0, prevBuffer, 0, byteBuffer.length);
-                    }
-
-                    frameByteBuffer.position(0);
-                    frameCount--;
-                }
-
-                FutureTask<Boolean> writeFrame = new FutureTask<>(() -> {
-                    writeFrame();
-                    return true;
-                });
-                Platform.runLater(writeFrame);
                 try {
-                    if (writeFrame.get()) {
-                        synchronized (this) {
-                            finished = true;
-                        }
+                    frameByteBuffer.get(currentImage);
+                    Rectangle2D dirtyRectangle = FrameUtil.getDirtyRectangle(currentImage, previousImage, width, height);
+                    if (dirtyRectangle == null) {
+                        finished = true;
+                        return;
                     }
-                } catch (InterruptedException | ExecutionException e) {
+                    Platform.runLater(() -> writeFrame(dirtyRectangle));
+                    System.arraycopy(currentImage, 0, previousImage, 0, currentImage.length);
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             });
@@ -262,44 +237,41 @@ public abstract class AbstractFrameTransfer<T> implements FrameTransfer {
     }
 
     /**
-     * Get the image byte buffer.
-     *
-     * @return the image byte buffer.
-     */
-    protected byte[] getImageByteBuffer() {
-        return imageByteBuffer;
-    }
-
-    /**
      * Get the prev image byte buffer.
      *
      * @return the prev image byte buffer.
      */
-    protected byte[] getPrevImageByteBuffer() {
-        return prevImageByteBuffer;
+    protected byte[] getPreviousImage() {
+        return previousImage;
     }
 
     /**
      * Write content to image.
      */
-    protected void writeFrame() {
-        frameByteBuffer.position(0);
+    protected void writeFrame(Rectangle2D dirtyRectangle) {
+        int minX = (int) dirtyRectangle.getMinX();
+        int minY = (int) dirtyRectangle.getMinY();
+        frameByteBuffer.position(4 * (width * minY + minX));
         PixelFormat pixelFormat = pixelWriter.getPixelFormat();
         // TODO premultiply not work and weaker performance
         switch (pixelFormat.getType()) {
             case INT_ARGB:
             case INT_ARGB_PRE:
-                pixelWriter.setPixels(0, 0, width, height,
+                pixelWriter.setPixels((int) dirtyRectangle.getMinX(), (int) dirtyRectangle.getMinY(),
+                        (int) dirtyRectangle.getWidth(), (int) dirtyRectangle.getHeight(),
                         PixelFormat.getIntArgbInstance(), frameByteBuffer.asIntBuffer(), width * 4);
                 break;
             case BYTE_BGRA:
             case BYTE_BGRA_PRE:
-                pixelWriter.setPixels(0, 0, width, height,
+                pixelWriter.setPixels((int) dirtyRectangle.getMinX(), (int) dirtyRectangle.getMinY(),
+                        (int) dirtyRectangle.getWidth(), (int) dirtyRectangle.getHeight(),
                         PixelFormat.getByteBgraInstance(), frameByteBuffer, width * 4);
                 break;
             default:
                 break;
         }
+        frameByteBuffer.position(0);
+        finished = true;
     }
 
     @Override
